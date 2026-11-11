@@ -2,6 +2,9 @@ import { useEffect, useRef } from 'react'
 import { Scene } from './three/Scene'
 import { initScroll, setStage } from './scroll/timeline'
 import { pointer } from './scroll/anim'
+import { Header } from './ui/Header'
+import { BracketButton } from './ui/BracketButton'
+import { DiamondGrid } from './ui/DiamondGrid'
 
 const LABELS: [string, string][] = [
   ['Top', 'Верхний корпус'],
@@ -35,6 +38,17 @@ export default function App() {
 
   return (
     <>
+      <Header />
+
+      {/* hero backdrop sits BEHIND the transparent WebGL canvas: glow, diamonds, giant title */}
+      <div className="hero-bg" aria-hidden="false">
+        <div className="hero-bg__glow" />
+        <DiamondGrid flicker={!reducedMotion && !lowQuality} />
+        <h1 className="hero-title">
+          <span className="grad">РАЗРЯД</span> <span className="grad">60</span>
+        </h1>
+      </div>
+
       <Scene low={lowQuality} />
 
       <div id="labels" className="labels" aria-hidden="true">
@@ -51,9 +65,13 @@ export default function App() {
       </div>
 
       <main ref={track} className="track">
-        <section data-stage="0" className="stage stage--hero">
-          <h1>Lunacy Moonlight Искра</h1>
-          <p>Механическая клавиатура 60%, собранная вокруг звука.</p>
+        <section data-stage="0" className="stage stage--hero" id="top">
+          <div className="hero-cta">
+            <p className="hero-cta__line">алюминий, 61 клавиша и ничего лишнего</p>
+            <BracketButton href="#buy" size="md">
+              купить
+            </BracketButton>
+          </div>
         </section>
         <section data-stage="1" className="stage">
           <p className="spec">PBT-кейкапы, профиль Cherry</p>
@@ -67,8 +85,8 @@ export default function App() {
         <section data-stage="4" className="stage stage--buy" id="buy">
           <div className="buy">
             <p className="spec">Корпус — анодированный алюминий</p>
-            <p className="price">11 990 ₽</p>
-            <button className="btn">Купить</button>
+            <p className="price">12 990 ₽</p>
+            <BracketButton href="#buy">купить</BracketButton>
           </div>
         </section>
       </main>

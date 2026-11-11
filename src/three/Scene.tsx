@@ -8,7 +8,6 @@ import { layout } from './layout'
 import { anim } from '../scroll/anim'
 import { LabelProjector } from './LabelProjector'
 import { Glow } from './Glow'
-import { PALETTE } from './recolor'
 
 type V3 = [number, number, number]
 interface Shot {
@@ -20,7 +19,7 @@ interface Shot {
 function shots(): Shot[] {
   const h = layout.heroPos
   return [
-    { pos: [0, 0.26, 0.4], target: [0, 0.012, 0.004] }, // 0 hero
+    { pos: [0, 0.27, 0.4], target: [0, 0.03, 0.004] }, // 0 hero (keyboard low, overlapping the title)
     { pos: [0.1, 0.36, 0.25], target: [0, 0.02, 0] }, // 1 lift: camera tilts down
     { pos: [0, 0.5, 0.42], target: [0, 0.05, 0] }, // 2 exploded
     { pos: [h.x + 0.07, h.y + 0.12, h.z + 0.15], target: [h.x + 0.008, h.y + 0.05, h.z] }, // 3 close-up
@@ -46,7 +45,7 @@ function CameraRig() {
     look.fromArray(a.target).lerp(v2.fromArray(b.target), t)
     // portrait screens: back off so the 30 cm board fits horizontally
     const aspect = size.width / size.height
-    const k = Math.max(1, 1.5 / aspect)
+    const k = Math.max(1, 1.3 / aspect)
     camera.position.copy(look).add(v1.sub(look).multiplyScalar(k))
     camera.lookAt(look)
   })
@@ -71,11 +70,10 @@ export function Scene({ low = false }: { low?: boolean }) {
   return (
     <Canvas
       dpr={dpr}
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.85, powerPreference: 'high-performance' }}
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.85, powerPreference: 'high-performance' }}
       camera={{ fov: 30, near: 0.01, far: 10, position: [0, 0.26, 0.4] }}
-      style={{ position: 'fixed', inset: 0 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1 }}
     >
-      <color attach="background" args={[PALETTE.bg]} />
       <StudioEnv intensity={0.55} />
       {/* rim / back light: catches the top-back edges of the graphite caps */}
       <directionalLight position={[0.1, 0.25, -0.6]} intensity={1.1} color="#ffffff" />
