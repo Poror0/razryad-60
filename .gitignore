@@ -3,3 +3,4 @@ dist
 shots
 *.log
 models/_build
+models/_source
