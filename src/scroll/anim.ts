@@ -21,3 +21,6 @@ export type AnimState = typeof anim
 
 /** pointer, normalised -1..1 */
 export const pointer = { x: 0, y: 0 }
+
+/** user motion preference (set once in initScroll) */
+export const motion = { reduced: false }

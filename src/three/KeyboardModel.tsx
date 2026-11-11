@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { recolorKeyboard, PALETTE } from './recolor'
 import { simpleBaseGeometry, simpleHousingGeometry, simpleStemGeometry } from './simpleSwitch'
-import { anim, pointer } from '../scroll/anim'
+import { anim, motion, pointer } from '../scroll/anim'
 import { SwitchHero } from './SwitchHero'
 import { layout } from './layout'
 
@@ -116,7 +116,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
   useFrame((state, dt) => {
     // ---- idle: slow sway + pointer, fades out once scrolling starts
     const t = state.clock.elapsedTime
-    const k = anim.idle
+    const k = motion.reduced ? 0 : anim.idle
     const targetRy = (Math.sin(t * 0.3) * 0.1 + pointer.x * 0.18) * k
     const targetRx = pointer.y * 0.06 * k
     const damp = 1 - Math.exp(-dt * 3)

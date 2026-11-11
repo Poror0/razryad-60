@@ -1,7 +1,7 @@
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
-import { anim } from './anim'
+import { anim, motion } from './anim'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -23,30 +23,23 @@ export function setStage(i: number) {
 
 /** smooth scroll + scrubbed timeline. Returns cleanup. */
 export function initScroll(track: HTMLElement, reducedMotion: boolean) {
-  if (reducedMotion) {
-    // static frames: jump to each stage when its section becomes the main one
-    const sections = Array.from(track.querySelectorAll<HTMLElement>('[data-stage]'))
-    const triggers = sections.map((el) =>
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => self.isActive && setStage(Number(el.dataset.stage)),
-      }),
-    )
-    setStage(0)
-    return () => triggers.forEach((t) => t.kill())
+  // Everyone gets the same smooth, scroll-scrubbed animation (no stage jumps).
+  // prefers-reduced-motion only removes extras: Lenis inertia, idle sway, diamond flicker.
+  motion.reduced = reducedMotion
+  let lenis: Lenis | null = null
+  let raf: ((time: number) => void) | null = null
+  if (!reducedMotion) {
+    lenis = new Lenis({ duration: 1.1, smoothWheel: true })
+    lenis.on('scroll', ScrollTrigger.update)
+    const l = lenis
+    raf = (time: number) => l.raf(time * 1000)
+    gsap.ticker.add(raf)
+    gsap.ticker.lagSmoothing(0)
   }
-
-  const lenis = new Lenis({ duration: 1.1, smoothWheel: true })
-  lenis.on('scroll', ScrollTrigger.update)
-  const raf = (time: number) => lenis.raf(time * 1000)
-  gsap.ticker.add(raf)
-  gsap.ticker.lagSmoothing(0)
 
   const tl = gsap.timeline({
     defaults: { ease: 'power2.inOut' },
-    scrollTrigger: { trigger: track, start: 'top top', end: 'bottom bottom', scrub: 0.6 },
+    scrollTrigger: { trigger: track, start: 'top top', end: 'bottom bottom', scrub: reducedMotion ? true : 0.6 },
   })
   // each stage: 0.8 transition + 0.2 hold, so text can be read at rest
   for (let i = 1; i < STAGES.length; i++) {
@@ -67,7 +60,7 @@ export function initScroll(track: HTMLElement, reducedMotion: boolean) {
   return () => {
     tl.scrollTrigger?.kill()
     tl.kill()
-    gsap.ticker.remove(raf)
-    lenis.destroy()
+    if (raf) gsap.ticker.remove(raf)
+    lenis?.destroy()
   }
 }
