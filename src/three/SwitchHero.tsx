@@ -42,7 +42,7 @@ export function SwitchHero({ low = false }: { low?: boolean }) {
     g.matrix.copy(layout.hero)
     const f = ease(clamp01(anim.focus))
     // rises out of the plate first, then the parts separate
-    const rise = ease(clamp01(f / 0.45)) * 0.012
+    const rise = ease(clamp01(f / 0.45)) * 0.026
     const sep = ease(clamp01((f - 0.25) / 0.75))
     for (const p of parts) {
       const off = EXPLODE[p.o.name] ?? 0

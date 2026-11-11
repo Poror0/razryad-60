@@ -21,8 +21,8 @@ function shots(): Shot[] {
     { pos: [0, 0.26, 0.4], target: [0, 0.012, 0.004] }, // 0 hero
     { pos: [0.1, 0.36, 0.25], target: [0, 0.02, 0] }, // 1 lift: camera tilts down
     { pos: [0, 0.5, 0.42], target: [0, 0.05, 0] }, // 2 exploded
-    { pos: [h.x + 0.075, h.y + 0.075, h.z + 0.15], target: [h.x + 0.006, h.y + 0.032, h.z] }, // 3 close-up
-    { pos: [-0.25, 0.19, 0.33], target: [0.045, 0.008, 0] }, // 4 final, model sits left of the buy block
+    { pos: [h.x + 0.07, h.y + 0.12, h.z + 0.15], target: [h.x + 0.008, h.y + 0.05, h.z] }, // 3 close-up
+    { pos: [-0.25, 0.3, 0.56], target: [0.085, 0.0, 0.01] }, // 4 final, model sits left of the buy block
   ]
 }
 
