@@ -36,7 +36,7 @@ export function SwitchHero({ low = false }: { low?: boolean }) {
   useFrame(() => {
     const g = holder.current
     if (!g) return
-    const visible = anim.focus > 0.001
+    const visible = anim.focus > 0.02
     g.visible = visible
     if (!visible) return
     g.matrix.copy(layout.hero)

@@ -145,7 +145,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
       c.node.quaternion.copy(c.baseQuat).multiply(tmpQ.setFromEuler(tmpE))
     }
     // swap simple switch <-> hero
-    const hide = anim.focus > 0.001
+    const hide = anim.focus > 0.02
     if (hide !== heroHidden.current && heroIndex >= 0) {
       heroHidden.current = hide
       for (const m of [housingRef.current, stemRef.current, baseRef.current]) {
