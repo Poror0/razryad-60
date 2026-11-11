@@ -17,6 +17,10 @@ export function StudioEnv({ intensity = 0.55 }: { intensity?: number }) {
       {/* side strips for edge highlights on the case */}
       <Lightformer form="rect" color="#ffffff" intensity={1.6} position={[-5, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 2, 1]} />
       <Lightformer form="rect" color="#ffffff" intensity={1.2} position={[5, 1.5, -1]} rotation-y={-Math.PI / 2} scale={[10, 1.5, 1]} />
+      {/* rim: wide strip behind and above — reflections along the back edges of the dark caps */}
+      <Lightformer form="rect" color="#ffffff" intensity={5} position={[0, 2.5, -4]} rotation-x={Math.PI * 0.15} scale={[12, 1.6, 1]} />
+      {/* red under-glow: low in front, below the horizon — reflected by the metal case front and cap skirts */}
+      <Lightformer form="rect" color="#c3232b" intensity={3} position={[0, -1.6, 3.5]} rotation-x={-Math.PI * 0.3} scale={[12, 2.5, 1]} />
     </Environment>
   )
 }

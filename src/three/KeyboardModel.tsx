@@ -34,7 +34,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
   const group = useRef<THREE.Group>(null)
 
   useLayoutEffect(() => {
-    recolorKeyboard(root, { legend: 'black', finish: 'metal', low })
+    recolorKeyboard(root, { low })
   }, [root, low])
 
   // ---- caps + seats on the tilted plate

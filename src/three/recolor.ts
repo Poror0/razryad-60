@@ -1,33 +1,32 @@
 import * as THREE from 'three'
 
-/** Palette taken from reference/ photos (top faces of red keycaps ≈ #c2383a under light). */
+/**
+ * Palette (single source of truth for all colours):
+ * graphite alphas with light-grey legends, red modifiers with white legends,
+ * a single white Esc, red anodised case, black plate.
+ */
 export const PALETTE = {
-  red: '#b0131c',
-  white: '#e9e5dc',
-  black: '#0f0f10',
-  legendDark: '#0c0c0c',
-  legendRed: '#b0131c',
-  legendLight: '#f6f3ee',
-  plate: '#1b1b1d',
-  caseBlack: '#111113',
+  bg: '#0e0e0e',
+  alpha: '#1a1a1c',
+  alphaLegend: '#d9d6d0',
+  red: '#c3232b',
+  redLegend: '#f6f3ee',
+  esc: '#eeeae2',
+  escLegend: '#121212',
+  caseRed: '#b0131c',
+  plate: '#0a0a0b',
 }
 
-export type LegendTone = 'black' | 'red'
-export type CaseFinish = 'plastic' | 'metal'
-
 export interface Look {
-  legend: LegendTone
-  finish: CaseFinish
   /** simplified materials for mobile */
   low?: boolean
 }
 
-/** Keys painted red. Original model: all of them except Space were green. */
+/** Red keys. Original model: these were green (except Space, which was beige). Esc is handled separately. */
 export const MODIFIERS = new Set([
-  'Esc', 'Tab', 'CapsLock', 'ShiftLeft', 'ShiftRight', 'ControlLeft', 'ControlRight',
+  'Tab', 'CapsLock', 'ShiftLeft', 'ShiftRight', 'ControlLeft', 'ControlRight',
   'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight', 'ContextMenu', 'Enter', 'Backspace', 'Space',
 ])
-const ORIGINALLY_BEIGE = new Set(['Space'])
 
 /**
  * Keycap material: the original baseColor texture is two-tone (beige #ecdcc4 / green #4c6444),
@@ -35,7 +34,7 @@ const ORIGINALLY_BEIGE = new Set(['Space'])
  *   t = "greenness" of the texel (0 beige … 1 green), mask = t on beige caps, 1 - t on green caps.
  * Final albedo = mix(capColor, legendColor, mask).
  */
-function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: string, invert: boolean, legendOn: boolean, low: boolean) {
+function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: string, invert: boolean, legendOn: boolean, low: boolean, env = 0.8) {
   const Mat = low ? THREE.MeshStandardMaterial : THREE.MeshPhysicalMaterial
   const m = new Mat({
     map: src.map,
@@ -44,7 +43,7 @@ function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: st
     metalness: 0,
   })
   // PBT: matte, keep env reflections low so colours don't wash out under ACES
-  m.envMapIntensity = 0.8
+  m.envMapIntensity = env
   if (m instanceof THREE.MeshPhysicalMaterial) {
     m.clearcoat = 0.04
     m.clearcoatRoughness = 0.6
@@ -79,33 +78,37 @@ function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: st
   return m
 }
 
-export function caseMaterial(finish: CaseFinish, low = false) {
-  if (finish === 'metal')
-    return low
-      ? new THREE.MeshStandardMaterial({ color: PALETTE.caseBlack, metalness: 1, roughness: 0.38 })
-      : new THREE.MeshPhysicalMaterial({ color: '#16161a', metalness: 1, roughness: 0.35, clearcoat: 0.2, clearcoatRoughness: 0.4 })
-  return new THREE.MeshStandardMaterial({ color: PALETTE.caseBlack, metalness: 0, roughness: 0.5 })
+/** red anodised aluminium */
+export function caseMaterial(low = false) {
+  return low
+    ? new THREE.MeshStandardMaterial({ color: PALETTE.caseRed, metalness: 1, roughness: 0.4 })
+    : new THREE.MeshPhysicalMaterial({ color: PALETTE.caseRed, metalness: 1, roughness: 0.4, clearcoat: 0.15, clearcoatRoughness: 0.5 })
 }
 
 /** Applies the palette to keyboard.glb scene (mutates materials, returns them for later tweaks). */
-export function recolorKeyboard(root: THREE.Object3D, look: Look) {
+export function recolorKeyboard(root: THREE.Object3D, look: Look = {}) {
   const low = !!look.low
   const caps = root.getObjectByName('Keycaps')
   const anyCap = caps?.children[0] as THREE.Mesh | undefined
   const src = anyCap?.material as THREE.MeshStandardMaterial
-  const legendOnWhite = look.legend === 'red' ? PALETTE.legendRed : PALETTE.legendDark
   const mats = {
-    white: keycapMaterial(src, PALETTE.white, legendOnWhite, false, true, low),
-    red: keycapMaterial(src, PALETTE.red, PALETTE.legendLight, true, true, low),
-    space: keycapMaterial(src, PALETTE.red, PALETTE.legendLight, false, false, low),
-    case: caseMaterial(look.finish, low),
-    plate: new THREE.MeshStandardMaterial({ color: PALETTE.plate, roughness: 0.75, metalness: 0.1 }),
+    // originally beige caps -> legend = green texels
+    alpha: keycapMaterial(src, PALETTE.alpha, PALETTE.alphaLegend, false, true, low, 1.25),
+    // originally green caps -> legend = beige texels
+    // lower env on red: the overhead softbox + ACES would push it to pink
+    red: keycapMaterial(src, PALETTE.red, PALETTE.redLegend, true, true, low, 0.42),
+    // large flat top catches more of the overhead light: compensate so it matches the other reds
+    space: keycapMaterial(src, '#' + new THREE.Color(PALETTE.red).multiplyScalar(0.82).getHexString(), PALETTE.redLegend, false, false, low, 0.32),
+    esc: keycapMaterial(src, PALETTE.esc, PALETTE.escLegend, true, true, low, 0.7),
+    case: caseMaterial(low),
+    plate: new THREE.MeshStandardMaterial({ color: PALETTE.plate, roughness: 0.7, metalness: 0.2 }),
   }
   caps?.children.forEach((c) => {
     const name = c.name.replace('key_', '')
     const mesh = c as THREE.Mesh
-    if (name === 'Space' || ORIGINALLY_BEIGE.has(name)) mesh.material = MODIFIERS.has(name) ? mats.space : mats.white
-    else mesh.material = MODIFIERS.has(name) ? mats.red : mats.white
+    if (name === 'Esc') mesh.material = mats.esc
+    else if (name === 'Space') mesh.material = mats.space
+    else mesh.material = MODIFIERS.has(name) ? mats.red : mats.alpha
   })
   const caseMesh = root.getObjectByName('Case') as THREE.Mesh | undefined
   if (caseMesh) caseMesh.material = mats.case
@@ -117,7 +120,7 @@ export function recolorKeyboard(root: THREE.Object3D, look: Look) {
 /** Switch-hero: red stem, black bottom, clear top. */
 export function recolorSwitch(root: THREE.Object3D, low = false) {
   const stem = new THREE.MeshPhysicalMaterial({ color: PALETTE.red, roughness: 0.35, clearcoat: 0.3 })
-  const bottom = new THREE.MeshStandardMaterial({ color: '#0d0d0f', roughness: 0.32 })
+  const bottom = new THREE.MeshStandardMaterial({ color: '#141416', roughness: 0.32 })
   // clear polycarbonate: plain alpha blend reads better on a dark page than transmission (which shows the black bg)
   const top = new THREE.MeshPhysicalMaterial({
     color: '#e8eef2',

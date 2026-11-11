@@ -7,6 +7,8 @@ import { StudioEnv } from './StudioEnv'
 import { layout } from './layout'
 import { anim } from '../scroll/anim'
 import { LabelProjector } from './LabelProjector'
+import { Glow } from './Glow'
+import { PALETTE } from './recolor'
 
 type V3 = [number, number, number]
 interface Shot {
@@ -73,10 +75,13 @@ export function Scene({ low = false }: { low?: boolean }) {
       camera={{ fov: 30, near: 0.01, far: 10, position: [0, 0.26, 0.4] }}
       style={{ position: 'fixed', inset: 0 }}
     >
-      <color attach="background" args={['#0d0d0e']} />
+      <color attach="background" args={[PALETTE.bg]} />
       <StudioEnv intensity={0.55} />
+      {/* rim / back light: catches the top-back edges of the graphite caps */}
+      <directionalLight position={[0.1, 0.25, -0.6]} intensity={1.1} color="#ffffff" />
       <Suspense fallback={null}>
         <KeyboardModel low={low} />
+        <Glow />
         <ContactShadows position={[0, 0, 0]} opacity={0.55} scale={0.7} blur={2.4} far={0.08} resolution={low ? 256 : 512} frames={low ? 1 : Infinity} color="#000000" />
         <Ready />
       </Suspense>
