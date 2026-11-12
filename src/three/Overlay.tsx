@@ -86,6 +86,13 @@ export function Overlay() {
     const past = track ? Math.max(0, h - track.getBoundingClientRect().bottom) : 0
     style(document.documentElement, '--past', `${Math.round(past)}px`)
 
+    // ---- hero line + button
+    const cta = document.querySelector<HTMLElement>('.hero-cta')
+    if (cta) {
+      style(cta, 'opacity', anim.hero.toFixed(3))
+      style(cta, 'visibility', anim.hero > 0.01 ? 'visible' : 'hidden')
+    }
+
     // ---- panels: fade + rise in, keep rising out when the next stage starts
     for (const panel of PANELS) {
       const el = document.getElementById(`panel-${panel.n}`)

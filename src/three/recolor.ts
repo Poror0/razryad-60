@@ -34,10 +34,10 @@ export const MODIFIERS = new Set([
  *   t = "greenness" of the texel (0 beige … 1 green), mask = t on beige caps, 1 - t on green caps.
  * Final albedo = mix(capColor, legendColor, mask).
  */
-function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: string, invert: boolean, legendOn: boolean, low: boolean, env = 0.8) {
+function keycapMaterial(src: THREE.MeshStandardMaterial, map: THREE.Texture | null, cap: string, legend: string, invert: boolean, legendOn: boolean, low: boolean, env = 0.8) {
   const Mat = low ? THREE.MeshStandardMaterial : THREE.MeshPhysicalMaterial
   const m = new Mat({
-    map: src.map,
+    map,
     normalMap: low ? null : src.normalMap,
     roughness: 0.66,
     metalness: 0,
@@ -78,6 +78,78 @@ function keycapMaterial(src: THREE.MeshStandardMaterial, cap: string, legend: st
   return m
 }
 
+/**
+ * Texture patches (2048² keycap baseColor, texel px): decorative twigs/leaves from the source texture are
+ * painted over with the surrounding cap colour; where the twig WAS the legend, a text legend is drawn instead.
+ * Legend text runs along the texture's vertical axis like the original "Enter"/"Tab" glyphs.
+ */
+interface Patch {
+  rect: [number, number, number, number]
+  text?: string
+  size?: number
+  /** the cap's UV island is mirrored relative to the others */
+  mirror?: boolean
+}
+export const LEGEND_PATCHES: Patch[] = [
+  { rect: [243, 503, 80, 50] }, // Enter: twig next to the word
+  { rect: [697, 672, 56, 36] }, // Tab: twig above the word
+  { rect: [517, 392, 82, 156], text: 'Backspace', size: 30 }, // twig = whole legend
+  { rect: [422, 562, 82, 142], text: 'Caps', size: 34, mirror: true }, // leaf = whole legend
+]
+const LEGEND_FONT = '"Onest Variable", "Arial", sans-serif'
+
+function paintPatches(x: CanvasRenderingContext2D) {
+  for (const p of LEGEND_PATCHES) {
+    const [px, py, w, h] = p.rect
+    // cap colour = texel just outside the patch
+    const d = x.getImageData(px - 4, py + (h >> 1), 1, 1).data
+    x.fillStyle = `rgb(${d[0]},${d[1]},${d[2]})`
+    x.fillRect(px, py, w, h)
+    if (!p.text) continue
+    x.save()
+    x.translate(px + w / 2, py + h / 2)
+    x.rotate(LEGEND_ROT)
+    if (p.mirror) x.scale(-LEGEND_FLIP, -1)
+    else x.scale(LEGEND_FLIP, 1)
+    x.fillStyle = '#ecdcc4'
+    x.font = `600 ${p.size ?? 32}px ${LEGEND_FONT}`
+    x.textAlign = 'center'
+    x.textBaseline = 'middle'
+    x.fillText(p.text, 0, 0)
+    x.restore()
+  }
+}
+const LEGEND_ROT = -Math.PI / 2
+const LEGEND_FLIP = -1
+
+function cleanLegendTexture(src: THREE.Texture) {
+  const img = src.image as CanvasImageSource & { width: number; height: number }
+  const c = document.createElement('canvas')
+  c.width = img.width
+  c.height = img.height
+  const x = c.getContext('2d', { willReadFrequently: true })!
+  const k = img.width / 2048
+  const draw = () => {
+    x.setTransform(1, 0, 0, 1, 0, 0)
+    x.drawImage(img, 0, 0)
+    x.setTransform(k, 0, 0, k, 0, 0)
+    paintPatches(x)
+  }
+  draw()
+  const t = new THREE.CanvasTexture(c)
+  t.flipY = src.flipY
+  t.colorSpace = src.colorSpace
+  t.wrapS = src.wrapS
+  t.wrapT = src.wrapT
+  t.anisotropy = src.anisotropy
+  // redraw once the web font is in (first draw may have used the fallback)
+  document.fonts?.load(`600 32px ${LEGEND_FONT}`).then(() => {
+    draw()
+    t.needsUpdate = true
+  })
+  return t
+}
+
 /** red anodised aluminium */
 export function caseMaterial(low = false) {
   return low
@@ -91,15 +163,16 @@ export function recolorKeyboard(root: THREE.Object3D, look: Look = {}) {
   const caps = root.getObjectByName('Keycaps')
   const anyCap = caps?.children[0] as THREE.Mesh | undefined
   const src = anyCap?.material as THREE.MeshStandardMaterial
+  const map = src?.map ? cleanLegendTexture(src.map) : null
   const mats = {
     // originally beige caps -> legend = green texels
-    alpha: keycapMaterial(src, PALETTE.alpha, PALETTE.alphaLegend, false, true, low, 1.25),
+    alpha: keycapMaterial(src, map, PALETTE.alpha, PALETTE.alphaLegend, false, true, low, 1.25),
     // originally green caps -> legend = beige texels
     // lower env on red: the overhead softbox + ACES would push it to pink
-    red: keycapMaterial(src, PALETTE.red, PALETTE.redLegend, true, true, low, 0.42),
+    red: keycapMaterial(src, map, PALETTE.red, PALETTE.redLegend, true, true, low, 0.42),
     // large flat top catches more of the overhead light: compensate so it matches the other reds
-    space: keycapMaterial(src, '#' + new THREE.Color(PALETTE.red).multiplyScalar(0.82).getHexString(), PALETTE.redLegend, false, false, low, 0.32),
-    esc: keycapMaterial(src, PALETTE.esc, PALETTE.escLegend, true, true, low, 0.7),
+    space: keycapMaterial(src, map, '#' + new THREE.Color(PALETTE.red).multiplyScalar(0.82).getHexString(), PALETTE.redLegend, false, false, low, 0.32),
+    esc: keycapMaterial(src, map, PALETTE.esc, PALETTE.escLegend, true, true, low, 0.7),
     case: caseMaterial(low),
     plate: new THREE.MeshStandardMaterial({ color: PALETTE.plate, roughness: 0.7, metalness: 0.2 }),
   }

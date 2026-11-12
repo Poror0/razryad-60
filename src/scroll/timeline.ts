@@ -24,6 +24,7 @@ const PANEL_KEYS = ['p1', 'p2', 'p3', 'p4', 'p5'] as const
 /** jump to a stage (dev ?stage=N): panel N shown, earlier ones gone, later ones hidden */
 export function setStage(i: number) {
   Object.assign(anim, STAGES[i])
+  anim.hero = i === 0 ? 1 : 0
   PANEL_KEYS.forEach((k, j) => (anim[k] = j + 1 < i ? 2 : j + 1 === i ? 1 : 0))
 }
 
@@ -52,7 +53,10 @@ export function initScroll(track: HTMLElement, reducedMotion: boolean) {
   for (let i = 1; i < STAGES.length; i++) {
     const at = i - 1
     const s = STAGES[i]
-    tl.to(anim, { lift: s.lift, explode: s.explode, idle: s.idle, cam: s.cam, duration: 0.8 }, at)
+    // stage 1: the hero line + button fade out first, the model only starts moving after that
+    if (i === 1) tl.to(anim, { hero: 0, duration: 0.12, ease: 'none' }, 0)
+    const lead = i === 1 ? 0.15 : 0
+    tl.to(anim, { lift: s.lift, explode: s.explode, idle: s.idle, cam: s.cam, duration: 0.8 - lead }, at + lead)
     if (i === 3) tl.to(anim, { focus: 1, duration: 0.8 }, at)
     if (i === 4) tl.to(anim, { focus: 0, duration: 0.45 }, at)
     const key = PANEL_KEYS[i - 1]

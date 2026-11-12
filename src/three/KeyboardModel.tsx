@@ -140,7 +140,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
       const tl = ease(clamp01((anim.lift - delay) / 0.5))
       const tx = ease(clamp01((anim.explode - rnd(c.i, 1) * 0.25) / 0.75))
       const spread = 1 + f * 1.6
-      const dx = (c.seat.x * 0.55 + (rnd(c.i, 2) - 0.5) * 0.02) * tx * spread
+      const dx = (c.seat.x * 0.45 + (rnd(c.i, 2) - 0.5) * 0.02) * tx * spread
       const dz = (c.seat.z * 1.7 + (rnd(c.i, 3) - 0.5) * 0.015) * tx * spread
       const dy = tl * 0.02 + tx * (0.045 + rnd(c.i, 4) * 0.05) + f * 0.08
       c.node.position.set(c.basePos.x + dx, c.basePos.y + dy, c.basePos.z + dz)

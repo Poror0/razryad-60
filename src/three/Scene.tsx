@@ -27,10 +27,10 @@ function shots(): Shot[] {
   return [
     { pos: [0, 0.27, 0.4], target: [0, 0.03, 0.004] }, // 0 hero (keyboard low, overlapping the title)
     { pos: [0.09, 0.44, 0.34], target: [0, 0.02, 0], sx: -0.22, sy: -0.15 }, // 1 lift: camera tilts down (panel right)
-    { pos: [0, 0.56, 0.5], target: [0, 0.05, 0], sx: 0.2, sy: -0.15 }, // 2 exploded (panel left)
+    { pos: [0, 0.68, 0.61], target: [0, 0.05, 0], sx: 0.1, sy: -0.15 }, // 2 exploded (panel left)
     { pos: [h.x + 0.07, h.y + 0.12, h.z + 0.15], target: [h.x + 0.008, h.y + 0.05, h.z], sx: -0.1, sy: -0.07, mx: 0.17 }, // 3 close-up (panel right)
     { pos: [0.37, 0.11, 0.18], target: [0.085, 0.006, 0.0], sx: 0.14, sy: -0.15 }, // 4 case edge (panel left)
-    { pos: [-0.25, 0.3, 0.56], target: [0.085, 0.0, 0.01], sx: -0.04, sy: -0.15 }, // 5 final, model left of the panel
+    { pos: [-0.335, 0.3, 0.36], target: [0.065, 0.0, 0.01], sx: -0.07, sy: -0.15 }, // 5 final, model left of the panel
   ]
 }
 

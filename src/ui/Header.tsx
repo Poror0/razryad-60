@@ -5,7 +5,6 @@ const LINKS: [string, string][] = [
   ['свитчи', '#switches'],
   ['характеристики', '#specs'],
   ['комплектация', '#kit'],
-  ['купить', '#buy'],
 ]
 
 export function Header() {

@@ -18,6 +18,8 @@ export const anim = {
   p3: 0,
   p4: 0,
   p5: 0,
+  /** hero line + button under the title: 1 visible, fades out before the model starts moving */
+  hero: 1,
   /** idle motion (hero rotation / mouse), 1 on first screen, fades out after */
   idle: 1,
   /** camera keyframe blend: index-based, see CAMERA in Scene */
