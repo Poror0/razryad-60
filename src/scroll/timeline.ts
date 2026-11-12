@@ -21,17 +21,10 @@ export const STAGES = [
 
 const PANEL_KEYS = ['p1', 'p2', 'p3', 'p4', 'p5'] as const
 
-/** jump to a stage (dev ?stage=N): panel N shown, earlier ones gone, later ones hidden */
-export function setStage(i: number) {
-  Object.assign(anim, STAGES[i])
-  anim.hero = i === 0 ? 1 : 0
-  PANEL_KEYS.forEach((k, j) => (anim[k] = j + 1 < i ? 2 : j + 1 === i ? 1 : 0))
-}
-
 /** smooth scroll + scrubbed timeline. Returns cleanup. */
 export function initScroll(track: HTMLElement, reducedMotion: boolean) {
   // Everyone gets the same smooth, scroll-scrubbed animation (no stage jumps).
-  // prefers-reduced-motion only removes extras: Lenis inertia, idle sway, diamond flicker.
+  // reduced motion only removes extras: Lenis inertia, idle sway, diamond flicker.
   motion.reduced = reducedMotion
   let lenis: Lenis | null = null
   let raf: ((time: number) => void) | null = null

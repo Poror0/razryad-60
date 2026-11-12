@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Scene } from './three/Scene'
-import { initScroll, setStage } from './scroll/timeline'
+import { initScroll } from './scroll/timeline'
 import { pointer } from './scroll/anim'
 import { Header } from './ui/Header'
 import { BracketButton } from './ui/BracketButton'
@@ -11,18 +11,24 @@ import { Buy, Faq, Footer, Kit, Sound, Specs } from './ui/Sections'
 import { initReveal } from './ui/reveal'
 
 const lowQuality = typeof window !== 'undefined' && (matchMedia('(max-width: 768px)').matches || matchMedia('(pointer: coarse)').matches)
-const grain = typeof window !== 'undefined' && new URLSearchParams(location.search).get('grain') === '1'
-const reducedMotion = typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+/**
+ * Motion preference: the system setting (prefers-reduced-motion), overridable with ?motion=full|reduced.
+ * Exposed to CSS as <html data-motion="full|reduced">.
+ */
+const reducedMotion = (() => {
+  if (typeof window === 'undefined') return false
+  const q = new URLSearchParams(location.search).get('motion')
+  const reduced = q === 'reduced' ? true : q === 'full' ? false : matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.documentElement.dataset.motion = reduced ? 'reduced' : 'full'
+  return reduced
+})()
 
 export default function App() {
   const track = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!track.current) return
-    // dev: ?stage=N freezes the scene on a stage (for screenshots)
-    const fixed = new URLSearchParams(location.search).get('stage')
-    if (fixed != null) setStage(Number(fixed))
-    const cleanup = fixed != null ? () => {} : initScroll(track.current, reducedMotion)
+    const cleanup = initScroll(track.current, reducedMotion)
     const onMove = (e: PointerEvent) => {
       pointer.x = (e.clientX / innerWidth) * 2 - 1
       pointer.y = (e.clientY / innerHeight) * 2 - 1
@@ -50,8 +56,8 @@ export default function App() {
       </div>
 
       <Scene low={lowQuality} />
-      {/* frame: soft vignette (+ optional film grain, ?grain=1) over the canvas, under the UI */}
-      <div className={`frame-fx${grain ? ' frame-fx--grain' : ''}`} aria-hidden="true" />
+      {/* frame: soft vignette over the canvas, under the UI */}
+      <div className="frame-fx" aria-hidden="true" />
 
       {/* callouts: leader lines + labels, positioned per frame from 3D anchors (Overlay) */}
       <div className="callouts" aria-hidden="true">

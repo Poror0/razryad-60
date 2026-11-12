@@ -85,19 +85,17 @@ function Glow() {
 /**
  * Post chain (only on capable devices):
  *   N8AO → DoF (stage 03) → selective Bloom → ACES tone mapping (the composer turns renderer tone mapping off).
- * Vignette and grain are CSS overlays: the canvas is transparent over the HTML hero backdrop.
+ * The vignette is a CSS overlay: the canvas is transparent over the HTML hero backdrop.
  */
-/** dev toggles for comparisons: ?noao ?nodof ?nobloom */
-const off = (k: string) => typeof location !== 'undefined' && new URLSearchParams(location.search).has(k)
 
 export function Effects({ quality }: { quality: Quality }) {
   if (quality === 'low') return null
   const high = quality === 'high'
   return (
     <EffectComposer multisampling={high ? 4 : 0} frameBufferType={THREE.HalfFloatType}>
-      <>{high && !off('noao') && <AO />}</>
-      <>{high && !off('nodof') && <StageDoF />}</>
-      <>{!off('nobloom') && <Glow />}</>
+      <>{high && <AO />}</>
+      <>{high && <StageDoF />}</>
+      <Glow />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
     </EffectComposer>
   )

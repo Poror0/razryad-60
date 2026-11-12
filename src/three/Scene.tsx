@@ -124,9 +124,6 @@ function Ready() {
   return null
 }
 
-/** URL overrides for comparisons: ?fx=low|mid|high, ?nofloor */
-const noFloor = typeof location !== 'undefined' && new URLSearchParams(location.search).has('nofloor')
-const fxParam = typeof location !== 'undefined' ? (new URLSearchParams(location.search).get('fx') as Quality | null) : null
 
 /** Dark floor with a soft, blurred reflection; fades out radially into the page background. */
 function Floor() {
@@ -195,7 +192,7 @@ function ShadowLight({ size }: { size: number }) {
 }
 
 export function Scene({ low = false }: { low?: boolean }) {
-  const [quality, setQuality] = useState<Quality>(fxParam ?? (low ? 'low' : 'high'))
+  const [quality, setQuality] = useState<Quality>(low ? 'low' : 'high')
   const [dprMax, setDprMax] = useState(low ? 1.5 : 2)
   const dpr = useMemo<[number, number]>(() => [1, dprMax], [dprMax])
   const shadows = quality !== 'low'
@@ -211,7 +208,6 @@ export function Scene({ low = false }: { low?: boolean }) {
       <PerformanceMonitor
         flipflops={2}
         onDecline={() => {
-          if (fxParam) return
           setQuality((q) => (q === 'high' ? 'mid' : 'low'))
           setDprMax((d) => (quality === 'low' ? Math.max(1, d - 0.5) : d))
         }}
@@ -223,7 +219,7 @@ export function Scene({ low = false }: { low?: boolean }) {
       <Suspense fallback={null}>
         <KeyboardModel low={low} />
         <Glow />
-        {quality === 'high' && !noFloor && <Floor />}
+        {quality === 'high' && <Floor />}
         {/* soft floor shadow: with post FX — the shadow-mapped key light on a ShadowMaterial plane (exactly 0 alpha where lit;
             ContactShadows' plane leaves a faint dark rectangle over the HTML backdrop in the half-float chain);
             without post FX (phones) — ContactShadows, rendered once */}
