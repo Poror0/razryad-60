@@ -160,8 +160,6 @@ a { color: inherit; text-decoration: none; }
 }
 .callouts__label span { color: var(--muted); }
 
-.credits { position: relative; z-index: 2; padding: 24px var(--gutter) 32px; font-size: 11px; line-height: 1.6; color: var(--dim); }
-.credits a { text-decoration: underline; }
 
 @media (max-width: 860px) {
   .nav { display: none; }

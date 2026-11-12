@@ -6,7 +6,9 @@ import { Header } from './ui/Header'
 import { BracketButton } from './ui/BracketButton'
 import { DiamondGrid } from './ui/DiamondGrid'
 import { StagePanel, StageRail } from './ui/StagePanel'
-import { CALLOUTS, PANELS, PRICE } from './content/stages'
+import { CALLOUTS, PANELS } from './content/stages'
+import { Buy, Faq, Footer, Kit, Sound, Specs } from './ui/Sections'
+import { initReveal } from './ui/reveal'
 
 const lowQuality = typeof window !== 'undefined' && (matchMedia('(max-width: 768px)').matches || matchMedia('(pointer: coarse)').matches)
 const grain = typeof window !== 'undefined' && new URLSearchParams(location.search).get('grain') === '1'
@@ -26,7 +28,9 @@ export default function App() {
       pointer.y = (e.clientY / innerHeight) * 2 - 1
     }
     addEventListener('pointermove', onMove)
+    const stopReveal = initReveal(reducedMotion)
     return () => {
+      stopReveal()
       cleanup()
       removeEventListener('pointermove', onMove)
     }
@@ -85,8 +89,7 @@ export default function App() {
             <StagePanel panel={panel}>
               {panel.n === PANELS.length && (
                 <div className="panel__buy">
-                  <p className="price">{PRICE}</p>
-                  <BracketButton href="#buy">купить</BracketButton>
+                  <BracketButton href="#buy">к покупке</BracketButton>
                 </div>
               )}
             </StagePanel>
@@ -94,11 +97,15 @@ export default function App() {
         ))}
       </main>
 
-      <footer className="credits">
-        3D models: “Custom - Mechanical Keyboard” (<a href="https://skfb.ly/oDNzq">https://skfb.ly/oDNzq</a>) by unknown.fbx; “Cherry MX Switches” (
-        <a href="https://skfb.ly/ovvxx">https://skfb.ly/ovvxx</a>) by BlackCube — licensed under CC BY 4.0 (
-        <a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a>)
-      </footer>
+      {/* after the 3D track: opaque sections cover the fixed canvas; the buy block lets it show through */}
+      <div className="after">
+        <Specs />
+        <Kit />
+        <Sound />
+        <Faq />
+        <Buy />
+        <Footer />
+      </div>
     </>
   )
 }

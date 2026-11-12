@@ -87,7 +87,6 @@ export const PANELS: StagePanel[] = [
   },
   {
     n: 4,
-    id: 'specs',
     title: 'корпус — алюминий и gasket',
     text: 'Фрезерованный алюминиевый корпус, анодирован в красный. Пластина лежит на силиконовых прокладках — удар мягче, звук ниже и глуше.',
     short: 'Алюминиевый корпус, пластина на силиконовых прокладках.',
@@ -100,7 +99,6 @@ export const PANELS: StagePanel[] = [
   },
   {
     n: 5,
-    id: 'buy',
     title: 'собрана — и ничего лишнего',
     text: '61 клавиша, USB-C и съёмный кабель. Всё остальное — на слое Fn.',
     short: '61 клавиша, USB-C, остальное — на слое Fn.',
@@ -130,4 +128,3 @@ export const CALLOUTS: Callout[] = [
   { id: 'gasket', stage: 4, text: 'gasket-mount', main: true, anchor: { kind: 'point', at: [0.1435, 0.0175, 0.03] }, dx: 210, dy: -220 },
 ]
 
-export const PRICE = '12 990 ₽'

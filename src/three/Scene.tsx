@@ -72,6 +72,36 @@ function CameraRig() {
   return null
 }
 
+/**
+ * Stop rendering while the opaque sections after the 3D track cover the whole viewport
+ * (between the end of the track and the transparent buy block). Saves the GPU on long reads.
+ */
+function PauseWhenCovered() {
+  const setFrameloop = useThree((s) => s.setFrameloop)
+  useEffect(() => {
+    let paused = false
+    const check = () => {
+      const track = document.querySelector('.track')
+      const buy = document.getElementById('buy')
+      if (!track || !buy) return
+      const covered = track.getBoundingClientRect().bottom <= 0 && buy.getBoundingClientRect().top >= innerHeight
+      if (covered !== paused) {
+        paused = covered
+        setFrameloop(covered ? 'never' : 'always')
+      }
+    }
+    addEventListener('scroll', check, { passive: true })
+    addEventListener('resize', check)
+    check()
+    return () => {
+      removeEventListener('scroll', check)
+      removeEventListener('resize', check)
+      setFrameloop('always')
+    }
+  }, [setFrameloop])
+  return null
+}
+
 function Ready() {
   const { active, progress } = useProgress()
   useEffect(() => {
@@ -200,6 +230,7 @@ export function Scene({ low = false }: { low?: boolean }) {
       </Suspense>
       <CameraRig />
       <Overlay />
+      <PauseWhenCovered />
       <Effects quality={quality} />
     </Canvas>
   )

@@ -36,7 +36,7 @@ export function initScroll(track: HTMLElement, reducedMotion: boolean) {
   let lenis: Lenis | null = null
   let raf: ((time: number) => void) | null = null
   if (!reducedMotion) {
-    lenis = new Lenis({ duration: 1.1, smoothWheel: true })
+    lenis = new Lenis({ duration: 1.1, smoothWheel: true, anchors: true })
     lenis.on('scroll', ScrollTrigger.update)
     const l = lenis
     raf = (time: number) => l.raf(time * 1000)
