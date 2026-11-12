@@ -7,4 +7,10 @@ export const layout = {
   heroPos: new THREE.Vector3(),
   /** plate tilt (rad), front lower */
   tilt: 0,
+  /** switch seat (plate surface) per keycap name, keyboard space */
+  seats: {} as Record<string, THREE.Vector3>,
+  /** the keyboard group (idle sway); keyboard space → world via its matrixWorld */
+  group: null as THREE.Object3D | null,
+  /** keyboard root (glTF scene clone) for node lookups */
+  root: null as THREE.Object3D | null,
 }

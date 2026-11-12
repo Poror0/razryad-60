@@ -5,13 +5,8 @@ import { pointer } from './scroll/anim'
 import { Header } from './ui/Header'
 import { BracketButton } from './ui/BracketButton'
 import { DiamondGrid } from './ui/DiamondGrid'
-
-const LABELS: [string, string][] = [
-  ['Top', 'Верхний корпус'],
-  ['Stem', 'Шток'],
-  ['Spring', 'Пружина'],
-  ['Bottom', 'Нижний корпус'],
-]
+import { StagePanel, StageRail } from './ui/StagePanel'
+import { CALLOUTS, PANELS, PRICE } from './content/stages'
 
 const lowQuality = typeof window !== 'undefined' && (matchMedia('(max-width: 768px)').matches || matchMedia('(pointer: coarse)').matches)
 const reducedMotion = typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -51,18 +46,27 @@ export default function App() {
 
       <Scene low={lowQuality} />
 
-      <div id="labels" className="labels" aria-hidden="true">
-        <svg className="labels__lines">
-          {LABELS.map(([k]) => (
-            <line key={k} id={`line-${k}`} />
+      {/* callouts: leader lines + labels, positioned per frame from 3D anchors (Overlay) */}
+      <div className="callouts" aria-hidden="true">
+        <svg className="callouts__lines">
+          {CALLOUTS.map((c) => (
+            <g key={c.id} id={`co-${c.id}`} className={c.main ? 'is-main' : undefined}>
+              <path pathLength={1} />
+              <circle r={2.5} />
+            </g>
           ))}
         </svg>
-        {LABELS.map(([k, t]) => (
-          <div key={k} id={`label-${k}`} className="labels__item">
-            {t}
-          </div>
-        ))}
+        {CALLOUTS.map((c) => {
+          const [head, ...rest] = c.text.split(' — ')
+          return (
+            <div key={c.id} id={`co-label-${c.id}`} className="callouts__label">
+              {head}
+              {rest.length > 0 && <span> — {rest.join(' — ')}</span>}
+            </div>
+          )
+        })}
       </div>
+      <StageRail />
 
       <main ref={track} className="track">
         <section data-stage="0" className="stage stage--hero" id="top">
@@ -73,22 +77,18 @@ export default function App() {
             </BracketButton>
           </div>
         </section>
-        <section data-stage="1" className="stage">
-          <p className="spec">PBT-кейкапы, профиль Cherry</p>
-        </section>
-        <section data-stage="2" className="stage">
-          <p className="spec">61 клавиша, hot-swap</p>
-        </section>
-        <section data-stage="3" className="stage">
-          <p className="spec">Линейные MX-свитчи, 45 гс</p>
-        </section>
-        <section data-stage="4" className="stage stage--buy" id="buy">
-          <div className="buy">
-            <p className="spec">Корпус — анодированный алюминий</p>
-            <p className="price">12 990 ₽</p>
-            <BracketButton href="#buy">купить</BracketButton>
-          </div>
-        </section>
+        {PANELS.map((panel) => (
+          <section key={panel.n} data-stage={panel.n} className="stage" id={panel.id}>
+            <StagePanel panel={panel}>
+              {panel.n === PANELS.length && (
+                <div className="panel__buy">
+                  <p className="price">{PRICE}</p>
+                  <BracketButton href="#buy">купить</BracketButton>
+                </div>
+              )}
+            </StagePanel>
+          </section>
+        ))}
       </main>
 
       <footer className="credits">

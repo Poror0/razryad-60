@@ -9,8 +9,15 @@ export const anim = {
   explode: 0,
   /** stage 3: close-up, hero switch replaces the simple one and comes apart, 0..1 */
   focus: 0,
-  /** stage 3: part labels opacity, 0..1 */
-  labels: 0,
+  /**
+   * stage panels + callouts 1..5: 0 hidden → 1 shown (fade in, lines draw) → 2 gone (leaves upwards).
+   * Driven by the scroll timeline, read every frame by the Overlay.
+   */
+  p1: 0,
+  p2: 0,
+  p3: 0,
+  p4: 0,
+  p5: 0,
   /** idle motion (hero rotation / mouse), 1 on first screen, fades out after */
   idle: 1,
   /** camera keyframe blend: index-based, see CAMERA in Scene */

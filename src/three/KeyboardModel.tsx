@@ -93,6 +93,9 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
   }, [caps])
 
   useEffect(() => {
+    layout.root = root
+    layout.group = group.current
+    for (const c of caps) layout.seats[c.node.name] = c.seat
     if (heroIndex >= 0) {
       const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), layout.tilt)
       layout.hero.compose(caps[heroIndex].seat, q, new THREE.Vector3(1, 1, 1))
@@ -104,7 +107,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
       m.instanceMatrix.needsUpdate = true
       m.computeBoundingSphere()
     }
-  }, [seatMatrices, heroIndex, caps])
+  }, [seatMatrices, heroIndex, caps, root])
 
   const heroHidden = useRef(false)
   const zero = useMemo(() => new THREE.Matrix4().makeScale(0, 0, 0), [])

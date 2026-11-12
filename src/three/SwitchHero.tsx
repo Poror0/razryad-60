@@ -13,7 +13,6 @@ const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 
 /** part name -> exploded offset along the switch axis (metres), bottom to top */
 const EXPLODE: Record<string, number> = { Bottom: 0, LED: 0, Spring: 0.013, Stem: 0.027, Top: 0.046 }
-export const LABELED_PARTS = ['Top', 'Stem', 'Spring', 'Bottom'] as const
 
 /** world-space objects the label overlay projects (filled on mount) */
 export const heroParts: Partial<Record<string, THREE.Object3D>> = {}

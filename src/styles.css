@@ -82,16 +82,70 @@ a { color: inherit; text-decoration: none; }
 .stage--hero { align-items: center; padding-bottom: 7vh; }
 .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
 .hero-cta__line { color: var(--fg) !important; font-size: 17px !important; opacity: 0.8; }
-.spec { font-size: 15px; }
-.stage--buy { align-items: flex-end; justify-content: center; }
-.buy { text-align: left; width: min(320px, 100%); }
-.price { color: var(--fg) !important; font: 500 44px/1 var(--mono) !important; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; margin: 16px 0 18px !important; }
+.price { color: var(--fg) !important; font: 500 40px/1 var(--mono) !important; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; margin: 0 !important; }
 
-/* ---------- switch part labels ---------- */
-.labels { position: fixed; inset: 0; z-index: 3; pointer-events: none; opacity: 0; visibility: hidden; }
-.labels__lines { position: absolute; inset: 0; width: 100%; height: 100%; }
-.labels__lines line { stroke: var(--fg); stroke-width: 1; opacity: 0.5; }
-.labels__item { position: absolute; left: 0; top: 0; font-size: 13px; white-space: nowrap; }
+/* ---------- stage panels (fixed; opacity / --dy written per frame by the Overlay) ---------- */
+.panel {
+  --dy: 28px;
+  --rail-room: 64px;
+  position: fixed; top: 50%; z-index: 4; width: min(420px, 34vw);
+  transform: translateY(calc(-50% + var(--dy) - var(--past, 0px)));
+  opacity: 0; visibility: hidden; pointer-events: none;
+  will-change: transform, opacity;
+}
+.panel::before {
+  /* soft dark pool behind the text, so it stays legible when a flying cap passes under it */
+  content: ''; position: absolute; inset: -18% -22%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(14, 14, 14, 0.78), rgba(14, 14, 14, 0.5) 55%, rgba(14, 14, 14, 0));
+}
+.panel--left { left: var(--gutter); }
+.panel--right { right: calc(var(--gutter) + var(--rail-room)); }
+.stage .panel__num { margin: 0 0 18px; font: 400 13px/1 var(--mono); color: var(--fg); letter-spacing: 0.02em; }
+.panel__of { color: var(--dim); margin-left: 0.9em; }
+.panel__title { margin: 0 0 20px; font: 600 clamp(28px, 2.6vw, 40px)/1.08 var(--display); letter-spacing: -0.03em; text-wrap: balance; }
+.stage .panel__text { margin: 0; max-width: 380px; font-size: clamp(16px, 1.15vw, 18px); line-height: 1.5; color: #b9b5ad; text-wrap: pretty; }
+.panel__short { display: none; }
+.panel__stats {
+  list-style: none; margin: 28px 0 0; padding: 22px 0 0; border-top: 1px solid var(--line);
+  display: flex; gap: clamp(20px, 2.4vw, 36px);
+}
+.panel__stats li { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.panel__value { font: 500 clamp(22px, 1.9vw, 28px)/1 var(--display); letter-spacing: -0.03em; color: var(--fg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.panel__value small { font: 400 0.5em/1 var(--text); letter-spacing: 0; color: var(--muted); }
+.panel__caption { font-size: 12px; line-height: 1.3; color: var(--muted); }
+.panel__buy { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+.panel__buy .bbtn { pointer-events: inherit; }
+
+/* ---------- stage progress rail ---------- */
+.rail {
+  position: fixed; right: calc(var(--gutter) * 0.5 + 8px); top: 50%; z-index: 4; height: min(260px, 36vh); width: 1px;
+  transform: translateY(calc(-50% - var(--past, 0px))); opacity: 0; visibility: hidden; pointer-events: none;
+}
+.rail__track { position: absolute; inset: 0; background: var(--line); }
+.rail__fill { position: absolute; inset: 0; background: var(--accent); transform-origin: top; transform: scaleY(var(--fill, 0)); }
+.rail__dot { position: absolute; left: 0; width: 0; height: 0; }
+.rail__dot i {
+  position: absolute; left: -3.5px; top: -3.5px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--dim); transition: background-color 0.3s, border-color 0.3s, transform 0.3s;
+}
+.rail__dot.is-done i { background: var(--accent); border-color: var(--accent); }
+.rail__dot.is-current i { transform: scale(1.45); }
+.rail__num { position: absolute; right: 12px; top: 0; transform: translateY(-50%); font: 400 10px/1 var(--mono); color: var(--dim); transition: color 0.3s; }
+.rail__dot.is-current .rail__num { color: var(--fg); }
+
+/* ---------- callouts (3D → screen leader lines) ---------- */
+.callouts { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+.callouts__lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.callouts__lines g { visibility: hidden; }
+.callouts__lines path { fill: none; stroke: var(--fg); stroke-width: 1; stroke-opacity: 0.55; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.callouts__lines circle { fill: var(--fg); stroke: var(--bg); stroke-width: 1.5; opacity: 0; }
+.callouts__label {
+  position: absolute; left: 0; top: 0; visibility: hidden; opacity: 0;
+  padding: 4px 7px; border-radius: 2px; background: rgba(14, 14, 14, 0.72);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  font-size: 13px; line-height: 1.2; white-space: nowrap; color: var(--fg);
+}
+.callouts__label span { color: var(--muted); }
 
 .credits { position: relative; z-index: 2; padding: 24px var(--gutter) 32px; font-size: 11px; line-height: 1.6; color: var(--dim); }
 .credits a { text-decoration: underline; }
@@ -101,4 +155,27 @@ a { color: inherit; text-decoration: none; }
   .header { grid-template-columns: 1fr auto; height: 58px; }
   .hero-title { top: 15vh; font-size: clamp(40px, 12.2vw, 72px); letter-spacing: -0.05em; }
   .hero-bg__glow { top: 55%; width: 160vw; height: 60vh; }
+}
+
+/* phones: panel under the model, one-sentence text, stats in 2 columns, slim rail without numbers */
+@media (max-width: 767px) {
+  .panel, .panel--left, .panel--right {
+    left: 16px; right: 16px; top: auto; bottom: max(20px, env(safe-area-inset-bottom)); width: auto;
+    transform: translateY(calc(var(--dy) - var(--past, 0px)));
+    padding-right: 20px;
+  }
+  .stage .panel__num { margin-bottom: 10px; font-size: 12px; }
+  .panel__title { font-size: clamp(21px, 6.2vw, 26px); margin-bottom: 10px; }
+  .stage .panel__text { font-size: 15px; }
+  .panel__long { display: none; }
+  .panel__short { display: inline; }
+  .panel__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin-top: 16px; padding-top: 14px; }
+  .panel__value { font-size: 20px; }
+  .panel__caption { font-size: 11px; }
+  .panel__buy { margin-top: 16px; padding-top: 14px; }
+  .price { font-size: 28px !important; }
+  .rail { right: 8px; top: 96px; transform: translateY(calc(0px - var(--past, 0px))); height: 120px; }
+  .rail__num { display: none; }
+  .rail__dot i { width: 5px; height: 5px; left: -2.5px; top: -2.5px; }
+  .callouts__label { font-size: 12px; white-space: normal; max-width: 150px; }
 }
