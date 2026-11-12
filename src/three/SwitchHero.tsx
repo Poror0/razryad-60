@@ -6,8 +6,9 @@ import { PALETTE, recolorSwitch } from './recolor'
 import { anim } from '../scroll/anim'
 import { layout } from './layout'
 import { glowObjects } from './glowRegistry'
+import { asset } from '../asset'
 
-export const HERO_URL = '/models/switch-hero.glb'
+export const HERO_URL = asset('models/switch-hero.glb')
 
 const ease = (t: number) => t * t * (3 - 2 * t)
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t))

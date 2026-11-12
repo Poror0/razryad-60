@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import { chromium } from 'playwright'
 
-const base = process.argv[2] ?? 'http://localhost:5173'
+const base = process.argv[2] ?? 'http://localhost:5173/razryad-60'
 fs.mkdirSync('public/renders', { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] })
 const page = await browser.newPage({ viewport: { width: 480, height: 480 }, deviceScaleFactor: 1 })

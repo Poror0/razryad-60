@@ -3,6 +3,7 @@ import { BracketButton } from './BracketButton'
 import { Icon } from './Icons'
 import { playKeystroke } from './sound'
 import { FAQ, FOOTER_COLS, KIT, PRODUCT, SOUND, SPECS } from '../content/page'
+import { asset } from '../asset'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -106,7 +107,7 @@ export function Sound() {
           </div>
         </div>
         <div ref={vis} className="sound__vis rv" aria-hidden="true">
-          <img src="/renders/keycap.webp" alt="" loading="lazy" decoding="async" width={480} height={480} />
+          <img src={asset('renders/keycap.webp')} alt="" loading="lazy" decoding="async" width={480} height={480} />
           <div className="sound__wave">
             {Array.from({ length: 28 }, (_, i) => (
               <i key={i} style={{ animationDelay: `${(i % 7) * 30}ms`, ['--h' as string]: `${20 + Math.abs(Math.sin(i * 1.7)) * 80}%` }} />

@@ -7,13 +7,14 @@ import { Bounds, ContactShadows, useBounds, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { StudioEnv } from '../three/StudioEnv'
 import { recolorKeyboard, recolorSwitch } from '../three/recolor'
+import { asset } from '../asset'
 
 const q = new URLSearchParams(location.search)
 const item = q.get('item') ?? 'switch'
 
 function Item() {
-  const kb = useGLTF('/models/keyboard.glb')
-  const sw = useGLTF('/models/switch-hero.glb')
+  const kb = useGLTF(asset('models/keyboard.glb'))
+  const sw = useGLTF(asset('models/switch-hero.glb'))
   const root = useMemo(() => {
     if (item === 'switch') {
       const r = sw.scene.clone(true)

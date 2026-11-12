@@ -8,8 +8,9 @@ import { anim, motion, pointer } from '../scroll/anim'
 import { SwitchHero } from './SwitchHero'
 import { layout } from './layout'
 import { Underglow } from './Glow'
+import { asset } from '../asset'
 
-export const KEYBOARD_URL = '/models/keyboard.glb'
+export const KEYBOARD_URL = asset('models/keyboard.glb')
 export const HERO_KEY = 'key_H'
 
 const ease = (t: number) => t * t * (3 - 2 * t)

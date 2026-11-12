@@ -1,5 +1,7 @@
 /** Copy for the sections after the 3D stages. Brand and product are fictional. */
 
+import { asset } from '../asset'
+
 export const PRODUCT = {
   name: 'РАЗРЯД 60',
   price: '12 990 ₽',
@@ -17,10 +19,10 @@ export const SPECS: { title: string; text: string }[] = [
 
 export type KitIcon = 'cable' | 'puller' | 'stickers'
 export const KIT: { title: string; note: string; render?: string; icon?: KitIcon }[] = [
-  { title: 'клавиатура', note: 'РАЗРЯД 60, собранная и смазанная', render: '/renders/keyboard.webp' },
+  { title: 'клавиатура', note: 'РАЗРЯД 60, собранная и смазанная', render: asset('renders/keyboard.webp') },
   { title: 'кабель USB-C', note: '1.8 м, в тканевой оплётке', icon: 'cable' },
   { title: 'съёмник 2-в-1', note: 'для кейкапов и свитчей', icon: 'puller' },
-  { title: '4 запасных свитча', note: 'такие же линейные, 45 гс', render: '/renders/switch.webp' },
+  { title: '4 запасных свитча', note: 'такие же линейные, 45 гс', render: asset('renders/switch.webp') },
   { title: 'стикер-пак', note: 'на ноутбук, кейс или коробку', icon: 'stickers' },
 ]
 

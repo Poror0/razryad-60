@@ -17,9 +17,9 @@
 
 ```bash
 npm i
-npm run dev      # dev-сервер на http://localhost:5173
+npm run dev      # dev-сервер на http://localhost:5173/razryad-60/
 npm run build    # проверка типов и production-сборка в dist/
-npm run preview  # просмотр сборки
+npm run preview  # просмотр сборки на http://localhost:4173/razryad-60/
 ```
 
 ## Устройство
