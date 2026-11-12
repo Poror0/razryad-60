@@ -1,6 +1,30 @@
-node_modules
-dist
-shots
+# dependencies and build output
+node_modules/
+dist/
+
+# environment and secrets
+.env
+.env*
+
+# local tooling and notes
+.claude/
+CLAUDE.md
+PROMPT*.md
+.mcp.json
+
+# screenshots, references, model sources and intermediates
+shots/
+reference/
+models/_source/
+models/_build/
+
+# dev-only pages and scratch files
+inspect.html
+src/dev/inspect.tsx
+scripts/_*.mjs
+*.tmp
+
+# logs and OS files
 *.log
-models/_build
-models/_source
+.DS_Store
+Thumbs.db
