@@ -7,6 +7,7 @@ import { simpleBaseGeometry, simpleHousingGeometry, simpleStemGeometry } from '.
 import { anim, motion, pointer } from '../scroll/anim'
 import { SwitchHero } from './SwitchHero'
 import { layout } from './layout'
+import { Underglow } from './Glow'
 
 export const KEYBOARD_URL = '/models/keyboard.glb'
 export const HERO_KEY = 'key_H'
@@ -35,6 +36,13 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
 
   useLayoutEffect(() => {
     recolorKeyboard(root, { low })
+    // shadows: caps (flying ones too) cast onto the plate; plate and case receive
+    root.traverse((o) => {
+      const m = o as THREE.Mesh
+      if (!m.isMesh) return
+      m.castShadow = true
+      m.receiveShadow = o.name === 'Plate' || o.name === 'Case'
+    })
   }, [root, low])
 
   // ---- caps + seats on the tilted plate
@@ -75,7 +83,7 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
   const geos = useMemo(() => ({ housing: simpleHousingGeometry(), stem: simpleStemGeometry(), base: simpleBaseGeometry() }), [])
   const mats = useMemo(
     () => ({
-      housing: new THREE.MeshPhysicalMaterial({ color: '#e8eef2', roughness: 0.15, transparent: true, opacity: 0.28, depthWrite: false, clearcoat: low ? 0 : 0.8 }),
+      housing: new THREE.MeshPhysicalMaterial({ color: '#e8eef2', roughness: 0.15, transparent: true, opacity: low ? 0.28 : 0.17, depthWrite: false, clearcoat: low ? 0 : 0.5 }),
       stem: new THREE.MeshStandardMaterial({ color: PALETTE.red, roughness: 0.4 }),
       base: new THREE.MeshStandardMaterial({ color: '#0c0c0d', roughness: 0.35 }),
     }),
@@ -163,10 +171,11 @@ export function KeyboardModel({ low = false }: { low?: boolean }) {
   return (
     <group ref={group}>
       <primitive object={root} />
-      <instancedMesh ref={baseRef} args={[geos.base, mats.base, n]} />
-      <instancedMesh ref={stemRef} args={[geos.stem, mats.stem, n]} />
+      <instancedMesh ref={baseRef} args={[geos.base, mats.base, n]} castShadow receiveShadow />
+      <instancedMesh ref={stemRef} args={[geos.stem, mats.stem, n]} castShadow receiveShadow />
       <instancedMesh ref={housingRef} args={[geos.housing, mats.housing, n]} renderOrder={2} />
       <SwitchHero low={low} />
+      <Underglow />
     </group>
   )
 }

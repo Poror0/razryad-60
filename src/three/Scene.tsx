@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, useProgress } from '@react-three/drei'
+import { ContactShadows, MeshReflectorMaterial, PerformanceMonitor, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import { KeyboardModel } from './KeyboardModel'
 import { StudioEnv } from './StudioEnv'
@@ -8,6 +8,7 @@ import { layout } from './layout'
 import { anim } from '../scroll/anim'
 import { Overlay } from './Overlay'
 import { Glow } from './Glow'
+import { Effects, type Quality } from './Effects'
 
 type V3 = [number, number, number]
 interface Shot {
@@ -84,26 +85,122 @@ function Ready() {
   return null
 }
 
+/** URL overrides for comparisons: ?fx=low|mid|high, ?nofloor */
+const noFloor = typeof location !== 'undefined' && new URLSearchParams(location.search).has('nofloor')
+const fxParam = typeof location !== 'undefined' ? (new URLSearchParams(location.search).get('fx') as Quality | null) : null
+
+/** Dark floor with a soft, blurred reflection; fades out radially into the page background. */
+function Floor() {
+  const alpha = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 256
+    const x = c.getContext('2d')!
+    const g = x.createRadialGradient(128, 128, 0, 128, 128, 128)
+    g.addColorStop(0, '#fff')
+    g.addColorStop(0.12, '#aaa')
+    g.addColorStop(0.3, '#000')
+    x.fillStyle = g
+    x.fillRect(0, 0, 256, 256)
+    return new THREE.CanvasTexture(c)
+  }, [])
+  // the hero shows the HTML backdrop (title, diamonds, glow) through the transparent canvas:
+  // the floor fades in only as the scene leaves the hero
+  const ref = useRef<THREE.Mesh>(null)
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    const k = THREE.MathUtils.clamp((0.85 - anim.idle) / 0.6, 0, 1)
+    m.visible = k > 0.01
+    ;(m.material as THREE.Material).opacity = k
+  })
+  return (
+    <mesh ref={ref} rotation-x={-Math.PI / 2} position={[0, -0.0012, 0.02]} renderOrder={-3}>
+      <planeGeometry args={[2.4, 2.4]} />
+      <MeshReflectorMaterial
+        color="#0e0e0e"
+        roughness={0.9}
+        metalness={0.4}
+        blur={[600, 200]}
+        resolution={512}
+        mixBlur={1}
+        mixStrength={0.55}
+        mixContrast={1}
+        depthScale={0.6}
+        minDepthThreshold={0.2}
+        maxDepthThreshold={1.2}
+        mirror={0}
+        transparent
+        alphaMap={alpha}
+        depthWrite={false}
+      />
+    </mesh>
+  )
+}
+
+/** Overhead key light that casts the caps’ shadows onto the plate (and the plate onto the case). */
+function ShadowLight({ size }: { size: number }) {
+  return (
+    <directionalLight
+      position={[0.06, 0.6, 0.18]}
+      intensity={0.45}
+      castShadow
+      shadow-mapSize={[size, size]}
+      shadow-bias={-0.0002}
+      shadow-normalBias={0.0006}
+      shadow-radius={10}
+      shadow-blurSamples={16}
+    >
+      <orthographicCamera attach="shadow-camera" args={[-0.26, 0.26, 0.2, -0.2, 0.2, 1.2]} />
+    </directionalLight>
+  )
+}
+
 export function Scene({ low = false }: { low?: boolean }) {
-  const dpr = useMemo<[number, number]>(() => (low ? [1, 1.5] : [1, 2]), [low])
+  const [quality, setQuality] = useState<Quality>(fxParam ?? (low ? 'low' : 'high'))
+  const [dprMax, setDprMax] = useState(low ? 1.5 : 2)
+  const dpr = useMemo<[number, number]>(() => [1, dprMax], [dprMax])
+  const shadows = quality !== 'low'
   return (
     <Canvas
       dpr={dpr}
-      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.85, powerPreference: 'high-performance' }}
+      shadows={!low}
+      gl={{ antialias: quality !== 'high', alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.85, powerPreference: 'high-performance' }}
       camera={{ fov: 30, near: 0.01, far: 10, position: [0, 0.26, 0.4] }}
       style={{ position: 'fixed', inset: 0, zIndex: 1 }}
     >
+      {/* weak devices: step down high → mid (no AO / DoF / reflections) → low (no post at all), then lower dpr */}
+      <PerformanceMonitor
+        flipflops={2}
+        onDecline={() => {
+          if (fxParam) return
+          setQuality((q) => (q === 'high' ? 'mid' : 'low'))
+          setDprMax((d) => (quality === 'low' ? Math.max(1, d - 0.5) : d))
+        }}
+      />
       <StudioEnv intensity={0.55} />
-      {/* rim / back light: catches the top-back edges of the graphite caps */}
-      <directionalLight position={[0.1, 0.25, -0.6]} intensity={1.1} color="#ffffff" />
+      {/* rim / back light: bright contour along the back edges of the case and caps */}
+      <directionalLight position={[0.1, 0.25, -0.6]} intensity={1.7} color="#ffffff" />
+      {shadows && <ShadowLight size={quality === 'high' ? 2048 : 1024} />}
       <Suspense fallback={null}>
         <KeyboardModel low={low} />
         <Glow />
-        <ContactShadows position={[0, 0, 0]} opacity={0.55} scale={0.7} blur={2.4} far={0.08} resolution={low ? 256 : 512} frames={low ? 1 : Infinity} color="#000000" />
+        {quality === 'high' && !noFloor && <Floor />}
+        {/* soft floor shadow: with post FX — the shadow-mapped key light on a ShadowMaterial plane (exactly 0 alpha where lit;
+            ContactShadows' plane leaves a faint dark rectangle over the HTML backdrop in the half-float chain);
+            without post FX (phones) — ContactShadows, rendered once */}
+        {quality !== 'low' ? (
+          <mesh rotation-x={-Math.PI / 2} position={[0, -0.0002, 0]} receiveShadow renderOrder={-2}>
+            <planeGeometry args={[0.9, 0.7]} />
+            <shadowMaterial transparent opacity={0.55} color="#000000" depthWrite={false} />
+          </mesh>
+        ) : (
+          <ContactShadows position={[0, 0, 0]} opacity={0.6} scale={0.7} blur={2.6} far={0.08} resolution={256} frames={1} color="#000000" />
+        )}
         <Ready />
       </Suspense>
       <CameraRig />
       <Overlay />
+      <Effects quality={quality} />
     </Canvas>
   )
 }

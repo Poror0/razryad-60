@@ -64,17 +64,48 @@ function keycapMaterial(src: THREE.MeshStandardMaterial, map: THREE.Texture | nu
       )
       .replace(
         '#include <map_fragment>',
-        `#ifdef USE_MAP
+        `float kLegend = 0.0;
+        #ifdef USE_MAP
           vec4 kTex = texture2D( map, vMapUv );
           // linear R: beige ≈ 0.84, green ≈ 0.072
           float kT = clamp( ( 0.84 - kTex.r ) / ( 0.84 - 0.072 ), 0.0, 1.0 );
           float kM = mix( kT, 1.0 - kT, uInvert ) * uLegendOn;
-          diffuseColor.rgb *= mix( uCap, uLegend, smoothstep( 0.06, 0.5, kM ) );
+          kLegend = smoothstep( 0.06, 0.5, kM );
+          diffuseColor.rgb *= mix( uCap, uLegend, kLegend );
         #endif`,
       )
   }
   m.customProgramCacheKey = () => 'keycap'
   m.userData.uniforms = uniforms
+  return m
+}
+
+/** Legend-only additive overlay (same mask as the keycap shader): the faint red glow of the Esc bolt, fed to the selective bloom. */
+export function legendGlowMaterial(map: THREE.Texture | null, invert: boolean, color: THREE.Color) {
+  const m = new THREE.MeshBasicMaterial({
+    map,
+    color,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  })
+  m.onBeforeCompile = (s) => {
+    s.uniforms.uInvert = { value: invert ? 1 : 0 }
+    s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uInvert;').replace(
+      '#include <map_fragment>',
+      `#ifdef USE_MAP
+        vec4 kTex = texture2D( map, vMapUv );
+        float kT = clamp( ( 0.84 - kTex.r ) / ( 0.84 - 0.072 ), 0.0, 1.0 );
+        float kM = smoothstep( 0.06, 0.5, mix( kT, 1.0 - kT, uInvert ) );
+        diffuseColor = vec4( diffuseColor.rgb * kM, kM );
+      #endif`,
+    )
+  }
+  m.customProgramCacheKey = () => 'legend-glow'
   return m
 }
 
@@ -173,13 +204,24 @@ export function recolorKeyboard(root: THREE.Object3D, look: Look = {}) {
     // large flat top catches more of the overhead light: compensate so it matches the other reds
     space: keycapMaterial(src, map, '#' + new THREE.Color(PALETTE.red).multiplyScalar(0.82).getHexString(), PALETTE.redLegend, false, false, low, 0.32),
     esc: keycapMaterial(src, map, PALETTE.esc, PALETTE.escLegend, true, true, low, 0.7),
+    /** additive overlay on Esc: only the bolt legend */
+    escGlow: legendGlowMaterial(map, true, new THREE.Color(PALETTE.red).multiplyScalar(1.4)),
     case: caseMaterial(low),
     plate: new THREE.MeshStandardMaterial({ color: PALETTE.plate, roughness: 0.7, metalness: 0.2 }),
   }
   caps?.children.forEach((c) => {
     const name = c.name.replace('key_', '')
     const mesh = c as THREE.Mesh
-    if (name === 'Esc') mesh.material = mats.esc
+    if (name === 'Esc') {
+      mesh.material = mats.esc
+      // legend glow overlay (same geometry, additive, bloom-selected)
+      mesh.getObjectByName('EscGlow')?.removeFromParent()
+      const glow = new THREE.Mesh(mesh.geometry, mats.escGlow)
+      glow.name = 'EscGlow'
+      glow.renderOrder = 3
+      // not bloom-selected: the selective bloom masks by depth, which would pick up the whole white cap
+      mesh.add(glow)
+    }
     else if (name === 'Space') mesh.material = mats.space
     else mesh.material = MODIFIERS.has(name) ? mats.red : mats.alpha
   })
@@ -200,16 +242,20 @@ export function recolorSwitch(root: THREE.Object3D, low = false) {
     roughness: 0.12,
     metalness: 0,
     transparent: true,
-    opacity: low ? 0.3 : 0.26,
-    clearcoat: low ? 0 : 1,
-    clearcoatRoughness: 0.05,
+    opacity: low ? 0.3 : 0.2,
+    clearcoat: low ? 0 : 0.35,
+    clearcoatRoughness: 0.08,
+    envMapIntensity: low ? 1 : 0.45,
     depthWrite: false,
     side: THREE.DoubleSide,
+    // faint red inner glow, driven by the stage-03 LED (emissiveIntensity 0..1)
+    emissive: new THREE.Color(PALETTE.red).multiplyScalar(0.12),
+    emissiveIntensity: 0,
   })
   const set = (name: string, mat: THREE.Material) =>
     root.getObjectByName(name)?.traverse((o) => {
       const mesh = o as THREE.Mesh
-      if (!mesh.isMesh) return
+      if (!mesh.isMesh || o.userData.proxy || o.userData.glow) return
       const old = mesh.material as THREE.MeshStandardMaterial
       if (old?.normalMap && 'normalMap' in mat && !low) (mat as THREE.MeshStandardMaterial).normalMap = old.normalMap
       mesh.material = mat

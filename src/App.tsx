@@ -9,6 +9,7 @@ import { StagePanel, StageRail } from './ui/StagePanel'
 import { CALLOUTS, PANELS, PRICE } from './content/stages'
 
 const lowQuality = typeof window !== 'undefined' && (matchMedia('(max-width: 768px)').matches || matchMedia('(pointer: coarse)').matches)
+const grain = typeof window !== 'undefined' && new URLSearchParams(location.search).get('grain') === '1'
 const reducedMotion = typeof window !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export default function App() {
@@ -45,6 +46,8 @@ export default function App() {
       </div>
 
       <Scene low={lowQuality} />
+      {/* frame: soft vignette (+ optional film grain, ?grain=1) over the canvas, under the UI */}
+      <div className={`frame-fx${grain ? ' frame-fx--grain' : ''}`} aria-hidden="true" />
 
       {/* callouts: leader lines + labels, positioned per frame from 3D anchors (Overlay) */}
       <div className="callouts" aria-hidden="true">

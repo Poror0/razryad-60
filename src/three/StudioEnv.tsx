@@ -10,8 +10,11 @@ export function StudioEnv({ intensity = 0.55 }: { intensity?: number }) {
   return (
     <Environment resolution={256} environmentIntensity={intensity} frames={1}>
       <color attach="background" args={['#050505']} />
-      {/* key: large softbox overhead */}
-      <Lightformer form="rect" color="#ffffff" intensity={4} position={[0, 5, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} />
+      {/* key: large softbox overhead (dimmer, so the strips below read as distinct highlights) */}
+      <Lightformer form="rect" color="#ffffff" intensity={2.6} position={[0, 5, 0]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} />
+      {/* two long thin strips overhead: stretched highlights along the aluminium case and cap tops */}
+      <Lightformer form="rect" color="#ffffff" intensity={9} position={[0, 3, 1.1]} rotation-x={Math.PI / 2} scale={[14, 0.35, 1]} />
+      <Lightformer form="rect" color="#ffffff" intensity={7} position={[0, 3, -0.6]} rotation-x={Math.PI / 2} scale={[14, 0.25, 1]} />
       {/* front fill */}
       <Lightformer form="rect" color="#ffffff" intensity={2} position={[0, 2, 5]} scale={[10, 3, 1]} />
       {/* side strips for edge highlights on the case */}
