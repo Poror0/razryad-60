@@ -77,13 +77,19 @@ export function Kit() {
 }
 
 export function Sound() {
-  const [playing, setPlaying] = useState(false)
+  // is-playing is toggled with classList on a ref — no React state, so the element's className
+  // (and anything other code put on it) is never rewritten
+  const vis = useRef<HTMLDivElement>(null)
   const timer = useRef<number>(0)
   const play = useCallback(() => {
     const d = playKeystroke()
-    setPlaying(true)
+    const el = vis.current
+    if (!el) return
+    el.classList.remove('is-playing')
+    void el.offsetWidth // restart the CSS animations on repeated clicks
+    el.classList.add('is-playing')
     clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => setPlaying(false), d * 1000 + 120)
+    timer.current = window.setTimeout(() => el.classList.remove('is-playing'), d * 1000 + 120)
   }, [])
   useEffect(() => () => clearTimeout(timer.current), [])
   return (
@@ -99,7 +105,7 @@ export function Sound() {
             <span className="sound__note">синтезируется в браузере, звук только по нажатию</span>
           </div>
         </div>
-        <div className={`sound__vis rv${playing ? ' is-playing' : ''}`} aria-hidden="true">
+        <div ref={vis} className="sound__vis rv" aria-hidden="true">
           <img src="/renders/keycap.webp" alt="" loading="lazy" decoding="async" width={480} height={480} />
           <div className="sound__wave">
             {Array.from({ length: 28 }, (_, i) => (
