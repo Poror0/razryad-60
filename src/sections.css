@@ -129,3 +129,10 @@ details[open] > summary .faq__x::after { transform: rotate(0deg); }
   .sound__vis { aspect-ratio: 16 / 10; }
   .sound__vis img { width: 56%; }
 }
+
+/* soft seams around the transparent buy block (the 3D frame moves with it, these blend the floor into the page) */
+.sec--buy { position: relative; }
+.sec--buy::before, .sec--buy::after { content: ''; position: absolute; left: 0; right: 0; height: 200px; pointer-events: none; z-index: 0; }
+.sec--buy::before { top: 0; background: linear-gradient(var(--bg), rgba(14, 14, 14, 0)); }
+.sec--buy::after { bottom: 0; background: linear-gradient(rgba(14, 14, 14, 0), var(--bg)); }
+.buy-card { position: relative; z-index: 1; }

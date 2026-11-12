@@ -31,7 +31,7 @@ function shots(): Shot[] {
     { pos: [0, 0.68, 0.61], target: [0, 0.05, 0], sx: 0.1, sy: -0.15 }, // 2 exploded (panel left)
     { pos: [h.x + 0.07, h.y + 0.12, h.z + 0.15], target: [h.x + 0.008, h.y + 0.05, h.z], sx: -0.1, sy: -0.07, mx: 0.17 }, // 3 close-up (panel right)
     { pos: [0.37, 0.11, 0.18], target: [0.085, 0.006, 0.0], sx: 0.14, sy: -0.15 }, // 4 case edge (panel left)
-    { pos: [-0.335, 0.3, 0.36], target: [0.065, 0.0, 0.01], sx: -0.07, sy: -0.15 }, // 5 final, model left of the panel
+    { pos: [-0.35, 0.315, 0.378], target: [0.065, 0.0, 0.01], sx: -0.06, sy: -0.15 }, // 5 final, model left of the panel
   ]
 }
 
@@ -63,7 +63,16 @@ function CameraRig() {
     const sy = narrow ? lerp(a.sy, b.sy, t) : 0
     const cam = camera as THREE.PerspectiveCamera
     const ox = Math.round(-sx * size.width)
-    const oy = Math.round(-sy * size.height)
+    let oy = Math.round(-sy * size.height)
+    // after the 3D track the frame is "attached" to the buy block: it slides in from below with it
+    // and leaves upwards before the footer, so the keyboard never shows through / gets cut by neighbours
+    const track = document.querySelector('.track')
+    const buy = document.getElementById('buy')
+    if (track && buy && track.getBoundingClientRect().bottom <= 0) {
+      const r = buy.getBoundingClientRect()
+      const shift = r.top > 0 ? r.top : r.bottom < size.height ? r.bottom - size.height : 0
+      oy -= Math.round(Math.max(-size.height, Math.min(size.height, shift)))
+    }
     const v = cam.view
     if (!v || v.offsetX !== ox || v.offsetY !== oy || v.fullWidth !== size.width || v.fullHeight !== size.height) {
       cam.setViewOffset(size.width, size.height, ox, oy, size.width, size.height)
